@@ -54,21 +54,21 @@ class OverlayWidget(QWidget):
         self.move(0, 0)
         self.resize(self.parent().width(), self.parent().height())
 
-        overlay_center_width, overlay_center_height = self._get_overlay_center()
+        overlay_corner_width, overlay_corner_height = self._get_overlay_corner()
         self._close_button.move(
-            overlay_center_width + self._overlay_width - self._close_button.width(),
-            overlay_center_height,
+            overlay_corner_width + self._overlay_width - self._close_button.width(),
+            overlay_corner_height,
         )
 
     def _get_window_size(self) -> Tuple[int, int]:
         size = self.size()
         return size.width(), size.height()
 
-    def _get_overlay_center(self) -> Tuple[int, int]:
+    def _get_overlay_corner(self) -> Tuple[int, int]:
         width, height = self._get_window_size()
-        overlay_center_width = int(width / 2 - self._overlay_width / 2)
-        overlay_center_height = int(height / 2 - self._overlay_height / 2)
-        return overlay_center_width, overlay_center_height
+        overlay_corner_width = int(width / 2 - self._overlay_width / 2)
+        overlay_corner_height = int(height / 2 - self._overlay_height / 2)
+        return overlay_corner_width, overlay_corner_height
 
     def paintEvent(self, event):
         painter = QPainter()
@@ -84,7 +84,7 @@ class OverlayWidget(QWidget):
         painter.setBrush(self._OVERLAY_BACKGROUND_COLOR)
         rounding_radius = 5
         overlay_rectangle = QRect(
-            *self._get_overlay_center(), self._overlay_width, self._overlay_height
+            *self._get_overlay_corner(), self._overlay_width, self._overlay_height
         )
         painter.drawRoundedRect(overlay_rectangle, rounding_radius, rounding_radius)
 
