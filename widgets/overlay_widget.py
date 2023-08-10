@@ -5,6 +5,9 @@ from qtpy.QtCore import QEvent, QRect, Qt
 from qtpy.QtGui import QColor, QPainter, QPalette
 from qtpy.QtWidgets import QPushButton, QWidget
 
+TRANSPARENT_COLOR = QColor(0, 0, 0, 0)
+WINDOW_BACKGROUND_COLOR = QColor(200, 200, 200, 125)
+
 
 class OverlayWidget(QWidget):
     def __init__(
@@ -13,36 +16,41 @@ class OverlayWidget(QWidget):
         overlay_width: int,
         overlay_height: int,
         add_close_button: bool,
+        window_background_color: QColor = WINDOW_BACKGROUND_COLOR,
+        overlay_background_color: QColor = None
     ):
         super().__init__(parent)
 
         self._overlay_width = overlay_width
         self._overlay_height = overlay_height
 
-        self._TRANSPARENT_COLOR = QColor(0, 0, 0, 0)
-        self._WINDOW_BACKGROUND_COLOR = QColor(25, 25, 25, 125)
-        self._OVERLAY_BACKGROUND_COLOR = self.palette().color(QPalette.Base)
+        self._window_background_color = window_background_color
+
+        if not overlay_background_color:
+            overlay_background_color = self.palette().color(QPalette.Base)
+        self._overlay_background_color = overlay_background_color
 
         parent.installEventFilter(self)
 
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
 
-        if add_close_button:
-            self._add_close_button()
+        self._close_button = self._create_close_button() if add_close_button else None
 
+    def showEvent(self, event):
         self._resize_to_parent()
 
-    def _add_close_button(self):
-        self._close_button = QPushButton(self)
-        self._close_button.setText("x")
-        self._close_button.setFixedSize(30, 30)
+    def _create_close_button(self):
+        close_button = QPushButton(self)
+        close_button.setText("x")
+        close_button.setFixedSize(30, 30)
 
-        font = self._close_button.font()
+        font = close_button.font()
         font.setPixelSize(15)
-        self._close_button.setFont(font)
+        close_button.setFont(font)
 
-        self._close_button.clicked.connect(lambda: self.close())
+        close_button.clicked.connect(lambda: self.close())
+        return close_button
 
     def eventFilter(self, obj, event) -> bool:
         if event.type() == QEvent.Resize:
@@ -55,10 +63,11 @@ class OverlayWidget(QWidget):
         self.resize(self.parent().width(), self.parent().height())
 
         overlay_corner_width, overlay_corner_height = self._get_overlay_corner()
-        self._close_button.move(
-            overlay_corner_width + self._overlay_width - self._close_button.width(),
-            overlay_corner_height,
-        )
+        if self._close_button:
+            self._close_button.move(
+                overlay_corner_width + self._overlay_width - self._close_button.width(),
+                overlay_corner_height,
+            )
 
     def _get_window_size(self) -> Tuple[int, int]:
         size = self.size()
@@ -75,13 +84,13 @@ class OverlayWidget(QWidget):
         painter.begin(self)
 
         painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(self._TRANSPARENT_COLOR)
-        painter.setBrush(self._WINDOW_BACKGROUND_COLOR)
+        painter.setPen(TRANSPARENT_COLOR)
+        painter.setBrush(self._window_background_color)
         width, height = self._get_window_size()
         painter.drawRect(0, 0, width, height)
 
-        painter.setPen(self._TRANSPARENT_COLOR)
-        painter.setBrush(self._OVERLAY_BACKGROUND_COLOR)
+        painter.setPen(TRANSPARENT_COLOR)
+        painter.setBrush(self._overlay_background_color)
         rounding_radius = 5
         overlay_rectangle = QRect(
             *self._get_overlay_corner(), self._overlay_width, self._overlay_height
