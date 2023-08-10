@@ -17,7 +17,7 @@ class OverlayWidget(QWidget):
         overlay_height: int,
         add_close_button: bool,
         window_background_color: QColor = WINDOW_BACKGROUND_COLOR,
-        overlay_background_color: QColor = None
+        overlay_background_color: QColor = None,
     ):
         super().__init__(parent)
 
